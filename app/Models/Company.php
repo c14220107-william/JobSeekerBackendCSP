@@ -13,7 +13,7 @@ class Company extends Model
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'profile_id',
+        'user_id',
         'name',
         'description',
         'address',
@@ -26,12 +26,13 @@ class Company extends Model
     ];
 
     /**
-     * Relasi ke Profile
+     * Relasi ke User
      */
-    public function profile(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Profile::class);
+        return $this->belongsTo(User::class);
     }
+
 
     /**
      * Relasi ke Job Postings

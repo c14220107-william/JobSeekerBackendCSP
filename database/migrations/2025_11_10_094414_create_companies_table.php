@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('profile_id');
             $table->string('name');
             $table->text('description')->nullable();
             $table->text('address')->nullable();
@@ -22,7 +21,6 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             
-            $table->foreign('profile_id')->references('id')->on('profiles')->onDelete('cascade');
         });
     }
 

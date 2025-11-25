@@ -16,7 +16,7 @@ class Profile extends Model
     protected $fillable = [
         'user_id',
         'full_name',
-        'role',
+        'age',
         'bio',
         'cv_url',
         'avatar_url',
@@ -33,10 +33,7 @@ class Profile extends Model
     /**
      * Relasi ke Company
      */
-    public function company(): HasOne
-    {
-        return $this->hasOne(Company::class);
-    }
+
 
     /**
      * Relasi ke Applications (untuk job seeker)

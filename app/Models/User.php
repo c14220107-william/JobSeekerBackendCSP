@@ -22,6 +22,8 @@ class User extends Authenticatable
     protected $fillable = [
         'email',
         'password',
+        'role',
+        'is_approved',
     ];
 
     /**
@@ -42,7 +44,32 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_approved' => 'boolean',
     ];
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is company
+     */
+    public function isCompany(): bool
+    {
+        return $this->role === 'company';
+    }
+
+    /**
+     * Check if user is regular user (job seeker)
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
 
     /**
      * Relasi one-to-one ke Profile
@@ -50,5 +77,13 @@ class User extends Authenticatable
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    /**
+     * Relasi one-to-one ke Company
+     */
+    public function company(): HasOne
+    {
+        return $this->hasOne(Company::class);
     }
 }

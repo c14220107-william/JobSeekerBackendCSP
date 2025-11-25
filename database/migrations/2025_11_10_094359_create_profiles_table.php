@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('user_id')->unique();
             $table->string('full_name')->nullable();
-            $table->string('role')->nullable();
+            $table->integer('age')->nullable();
             $table->text('bio')->nullable();
             $table->string('cv_url')->nullable();
             $table->string('avatar_url')->nullable();

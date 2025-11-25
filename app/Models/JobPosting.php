@@ -21,6 +21,7 @@ class JobPosting extends Model
         'description',
         'tenure',
         'type',
+        'status'
     ];
 
     /**
