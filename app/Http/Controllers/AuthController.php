@@ -131,29 +131,40 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'password.required' => 'Password wajib diisi.',
-        ]);
 
-        if ($validator->fails()) {
+        $creds = $request->only('email', 'password');
+        $validate = Validator::make(
+            $creds,
+            [
+                'email' => 'required|exists:users,email',
+                'password' => 'required|string',
+            ],
+            [
+                'email.required' => 'email is required',
+                'email.exists' => 'Email not found',
+                'password.required' => 'Password is required',
+                'password.string' => 'Password must be string',
+            ],
+        );
+
+        if ($validate->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validate->errors()
             ], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $creds['email'])->first();
         
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
-            ]);
+        if (!$user || !Hash::check($creds['password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => [
+                    'password' => ['Password is incorrect']
+                ]
+            ], 422);
         }
         
 
@@ -172,7 +183,6 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-       
         // Load relasi sesuai role
         $userData = $user;
         if ($user->role === 'user') {
@@ -180,7 +190,6 @@ class AuthController extends Controller
         } elseif ($user->role === 'company') {
             $userData = $user->load('company');
         }
-       
 
         return response()->json([
             'success' => true,
