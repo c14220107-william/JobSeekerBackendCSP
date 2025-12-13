@@ -58,9 +58,12 @@ Route::middleware(['auth:sanctum', 'role:company', 'company.approved'])->prefix(
     Route::get('/job-postings/{id}', [JobPostingController::class, 'show']);
     Route::put('/job-postings/{id}', [JobPostingController::class, 'update']);
     Route::put('/job-postings/{id}/status', [JobPostingController::class, 'updateStatusJobPosting']);
-
-    
     Route::delete('/job-postings/{id}', [JobPostingController::class, 'destroy']);
+    
+    // Applicants management
+    Route::get('/job-postings/{id}/applicants', [JobPostingController::class, 'applicant']);
+    Route::post('/applicants/{applicationId}/accept', [JobPostingController::class, 'acceptApplicant']);
+    Route::post('/applicants/{applicationId}/reject', [JobPostingController::class, 'rejectApplicant']);
 });
 
 // Protected routes - Admin role only

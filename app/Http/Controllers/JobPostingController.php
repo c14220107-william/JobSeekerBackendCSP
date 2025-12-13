@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\JobPosting;
@@ -236,6 +237,7 @@ class JobPostingController extends Controller
         $company = $user->company;
 
         $jobPostings = JobPosting::where('company_id', $company->id)
+            ->withCount('applications')
             ->with('qualifications', 'applications')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -244,6 +246,107 @@ class JobPostingController extends Controller
             'success' => true,
             'data' => [
                 'job_postings' => $jobPostings
+            ]
+        ], 200);
+    }
+
+    
+    public function applicant(Request $request, $id)
+    {
+        $applicants = JobPosting::where('id', $id)
+        ->with([
+            'applications.seeker',      // Load Profile (seeker)
+            'applications.seeker.user'  // Load User dari Profile
+        ])
+        ->first();
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'applicants' => $applicants
+            ]
+        ], 200);
+    }
+
+    /**
+     * Accept applicant
+     */
+    public function acceptApplicant(Request $request, $applicationId)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        // Find application
+        $application = Application::with('jobPosting')
+            ->find($applicationId);
+
+        if (!$application) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Application not found'
+            ], 404);
+        }
+
+        // Verify job posting belongs to company
+        if ($application->jobPosting->company_id !== $company->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to accept this applicant'
+            ], 403);
+        }
+
+        // Update status to accepted
+        $application->status = 'accepted';
+        $application->save();
+
+        $application->load('seeker.user');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Applicant accepted successfully',
+            'data' => [
+                'application' => $application
+            ]
+        ], 200);
+    }
+
+    /**
+     * Reject applicant
+     */
+    public function rejectApplicant(Request $request, $applicationId)
+    {
+        $user = $request->user();
+        $company = $user->company;
+
+        // Find application
+        $application = Application::with('jobPosting')
+            ->find($applicationId);
+
+        if (!$application) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Application not found'
+            ], 404);
+        }
+
+        // Verify job posting belongs to company
+        if ($application->jobPosting->company_id !== $company->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to reject this applicant'
+            ], 403);
+        }
+
+        // Update status to rejected
+        $application->status = 'rejected';
+        $application->save();
+
+        $application->load('seeker.user');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Applicant rejected successfully',
+            'data' => [
+                'application' => $application
             ]
         ], 200);
     }
@@ -257,7 +360,8 @@ class JobPostingController extends Controller
         $company = $user->company;
 
         $jobPosting = JobPosting::where('company_id', $company->id)
-            ->with('qualifications', 'applications.seeker')
+            ->withCount('applications')
+            ->with('qualifications', 'applications.seeker.user')
             ->find($id);
 
         if (!$jobPosting) {
@@ -281,6 +385,7 @@ class JobPostingController extends Controller
     public function index()
     {
         $jobPostings = JobPosting::where('status', 'open')
+            ->withCount('applications')
             ->with('company', 'qualifications')
             ->orderBy('created_at', 'desc')
             ->get();

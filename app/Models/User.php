@@ -86,4 +86,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Company::class);
     }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class, 'seeker_id');
+    }
 }
