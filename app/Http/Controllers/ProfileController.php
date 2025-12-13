@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Profile;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -14,17 +15,21 @@ class ProfileController extends Controller
     public function createOrUpdate(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => 'nullable|string|max:255',
-            'age' => 'nullable|integer',
+            'age' => 'nullable|integer|min:17|max:100',
             'bio' => 'nullable|string',
-            'cv_url' => 'nullable|url',
-            'avatar_url' => 'nullable|url',
+            'cv' => 'nullable|file|mimes:pdf|max:5120',
+            'avatar' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
-            'full_name.max' => 'Nama lengkap maksimal 255 karakter.',
             'age.integer' => 'Umur harus berupa angka.',
+            'age.min' => 'Umur minimal 17 tahun.',
+            'age.max' => 'Umur maksimal 100 tahun.',
             'bio.string' => 'Bio harus berupa teks.',
-            'cv_url.url' => 'Format URL CV tidak valid.',
-            'avatar_url.url' => 'Format URL avatar tidak valid.',
+            'cv.file' => 'CV harus berupa file.',
+            'cv.mimes' => 'CV harus berformat PDF.',
+            'cv.max' => 'Ukuran CV maksimal 5MB.',
+            'avatar.image' => 'Avatar harus berupa gambar.',
+            'avatar.mimes' => 'Avatar harus berformat JPEG, PNG, JPG, atau GIF.',
+            'avatar.max' => 'Ukuran avatar maksimal 2MB.',
         ]);
 
         if ($validator->fails()) {
@@ -35,19 +40,43 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        
-
         $user = $request->user();
 
-        // Cek apakah profile sudah ada
+        // Get existing profile to preserve old URLs if no new file uploaded
+        $existingProfile = Profile::where('user_id', $user->id)->first();
+
+        // Handle file uploads
+        $cvUrl = $existingProfile->cv_url ?? null;
+        $avatarUrl = $existingProfile->avatar_url ?? null;
+
+        if ($request->hasFile('cv')) {
+            // Delete old CV if exists
+            if ($existingProfile && $existingProfile->cv_url) {
+                $oldPath = str_replace('/storage/', '', $existingProfile->cv_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $cvPath = $request->file('cv')->store('profiles/' . $user->id . '/cv', 'public');
+            $cvUrl = '/storage/' . $cvPath;
+        }
+
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($existingProfile && $existingProfile->avatar_url) {
+                $oldPath = str_replace('/storage/', '', $existingProfile->avatar_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $avatarPath = $request->file('avatar')->store('profiles/' . $user->id . '/avatar', 'public');
+            $avatarUrl = '/storage/' . $avatarPath;
+        }
+
+        // Create or update profile
         $profile = Profile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'full_name' => $request->full_name,
                 'age' => $request->age,
                 'bio' => $request->bio,
-                'cv_url' => $request->cv_url,
-                'avatar_url' => $request->avatar_url,
+                'cv_url' => $cvUrl,
+                'avatar_url' => $avatarUrl,
             ]
         );
 

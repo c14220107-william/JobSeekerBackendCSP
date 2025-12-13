@@ -157,6 +157,50 @@ class JobPostingController extends Controller
         ], 200);
     }
 
+    public function updateStatusJobPosting(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:open,closed',
+        ], [
+            'status.required' => 'Status wajib diisi.',
+            'status.in' => 'Status harus open atau closed.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+        $company = $user->company;
+
+        $jobPosting = JobPosting::where('company_id', $company->id)->find($id);
+
+        if (!$jobPosting) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job posting not found or you do not have permission to update it'
+            ], 404);
+        }
+
+        // Update status job posting
+        $jobPosting->status = $request->status;
+        $jobPosting->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Job posting status updated successfully',
+            'data' => [
+                'job_posting' => $jobPosting
+            ]
+        ], 200);
+
+
+    }
+
     /**
      * Delete job posting
      */

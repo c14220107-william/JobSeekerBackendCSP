@@ -147,7 +147,7 @@ class AuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
+        
         $user = User::where('email', $request->email)->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {

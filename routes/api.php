@@ -57,6 +57,9 @@ Route::middleware(['auth:sanctum', 'role:company', 'company.approved'])->prefix(
     Route::get('/job-postings', [JobPostingController::class, 'myJobPostings']);
     Route::get('/job-postings/{id}', [JobPostingController::class, 'show']);
     Route::put('/job-postings/{id}', [JobPostingController::class, 'update']);
+    Route::put('/job-postings/{id}/status', [JobPostingController::class, 'updateStatusJobPosting']);
+
+    
     Route::delete('/job-postings/{id}', [JobPostingController::class, 'destroy']);
 });
 
