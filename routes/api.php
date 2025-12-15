@@ -46,7 +46,7 @@ Route::middleware(['auth:sanctum', 'role:user'])->prefix('user')->group(function
     Route::post('/profile', [ProfileController::class, 'createOrUpdate']);
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
-    
+
     // Job application
     Route::post('/job-postings/{id}/apply', [JobPostingController::class, 'applyJob']);
     Route::get('/applications', [JobPostingController::class, 'myApplications']);
@@ -55,7 +55,9 @@ Route::middleware(['auth:sanctum', 'role:user'])->prefix('user')->group(function
 // Protected routes - Company role only (must be approved)
 Route::middleware(['auth:sanctum', 'role:company', 'company.approved'])->prefix('company')->group(function () {
     Route::get('/details', [CompanyController::class, 'show']);
-    
+    Route::put('/profile', [CompanyController::class, 'createOrUpdate']);
+    Route::get('/view/{id}', [CompanyController::class, 'showById']);
+
     // Job posting management
     Route::post('/job-postings', [JobPostingController::class, 'store']);
     Route::get('/job-postings', [JobPostingController::class, 'myJobPostings']);
@@ -63,7 +65,7 @@ Route::middleware(['auth:sanctum', 'role:company', 'company.approved'])->prefix(
     Route::put('/job-postings/{id}', [JobPostingController::class, 'update']);
     Route::put('/job-postings/{id}/status', [JobPostingController::class, 'updateStatusJobPosting']);
     Route::delete('/job-postings/{id}', [JobPostingController::class, 'destroy']);
-    
+
     // Applicants management
     Route::get('/job-postings/{id}/applicants', [JobPostingController::class, 'applicant']);
     Route::post('/applicants/{applicationId}/accept', [JobPostingController::class, 'acceptApplicant']);
@@ -74,13 +76,13 @@ Route::middleware(['auth:sanctum', 'role:company', 'company.approved'])->prefix(
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminController::class, 'dashboard']);
-    
+
     // Company management
     Route::get('/companies/pending', [AdminController::class, 'pendingCompanies']);
     Route::get('/companies/approved', [AdminController::class, 'approvedCompanies']);
     Route::post('/companies/{userId}/approve', [AdminController::class, 'approveCompany']);
     Route::post('/companies/{userId}/reject', [AdminController::class, 'rejectCompany']);
-    
+
     // Data management
     Route::get('/users', [AdminController::class, 'allUsers']);
     Route::get('/job-postings', [AdminController::class, 'allJobPostings']);

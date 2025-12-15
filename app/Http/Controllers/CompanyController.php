@@ -41,12 +41,11 @@ class CompanyController extends Controller
                 'description' => $request->description,
                 'address' => $request->address,
                 'photo_url' => $request->photo_url,
-                'is_approved' => false, 
             ]
         );
 
         // Update user approval status
-        $user->is_approved = false;
+        $user->is_approved = true;
         $user->save();
 
         return response()->json([
@@ -76,8 +75,7 @@ class CompanyController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'company' => $company,
-                'is_approved' => $user->is_approved
+                'company' => $company
             ]
         ], 200);
     }
