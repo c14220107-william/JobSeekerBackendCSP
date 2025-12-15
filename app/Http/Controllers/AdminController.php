@@ -155,7 +155,7 @@ class AdminController extends Controller
      */
     public function allJobPostings()
     {
-        $jobPostings = JobPosting::with('company.user', 'qualifications')
+        $jobPostings = JobPosting::with('company.user', 'qualifications')->withCount('applications')
             ->get();
 
         return response()->json([

@@ -435,4 +435,101 @@ class JobPostingController extends Controller
             ]
         ], 200);
     }
+
+    /**
+     * Apply for a job posting (User/Job Seeker only)
+     */
+    public function applyJob(Request $request, $id)
+    {
+        $user = $request->user();
+        
+        // Check if user has profile
+        $profile = $user->profile;
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please complete your profile before applying for jobs'
+            ], 403);
+        }
+
+        // Find job posting
+        $jobPosting = JobPosting::find($id);
+        
+        if (!$jobPosting) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job posting not found'
+            ], 404);
+        }
+
+        // Check if job posting is still open
+        if ($jobPosting->status !== 'open') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This job posting is no longer accepting applications'
+            ], 400);
+        }
+
+        // Check if user already applied
+        $existingApplication = \App\Models\Application::where('job_id', $id)
+            ->where('seeker_id', $profile->id)
+            ->first();
+
+        if ($existingApplication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already applied for this job',
+                'data' => [
+                    'application' => $existingApplication
+                ]
+            ], 400);
+        }
+
+        // Create application
+        $application = Application::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'job_id' => $id,
+            'seeker_id' => $profile->id,
+            'status' => 'pending',
+        ]);
+
+        $application->load('jobPosting.company', 'seeker');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application submitted successfully',
+            'data' => [
+                'application' => $application
+            ]
+        ], 201);
+    }
+
+    /**
+     * Get user's applications (Job Seeker only)
+     */
+    public function myApplications(Request $request)
+    {
+        $user = $request->user();
+        $profile = $user->profile;
+
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+
+        $applications = \App\Models\Application::where('seeker_id', $profile->id)
+            ->with('jobPosting.company', 'jobPosting.qualifications')
+            ->orderBy('applied_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'applications' => $applications,
+                'total_applications' => $applications->count()
+            ]
+        ], 200);
+    }
 }

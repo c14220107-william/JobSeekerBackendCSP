@@ -46,6 +46,10 @@ Route::middleware(['auth:sanctum', 'role:user'])->prefix('user')->group(function
     Route::post('/profile', [ProfileController::class, 'createOrUpdate']);
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
+    
+    // Job application
+    Route::post('/job-postings/{id}/apply', [JobPostingController::class, 'applyJob']);
+    Route::get('/applications', [JobPostingController::class, 'myApplications']);
 });
 
 // Protected routes - Company role only (must be approved)
