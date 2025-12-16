@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Profile;
+use App\Models\Application;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
@@ -94,7 +95,8 @@ class ProfileController extends Controller
      */
     public function show(Request $request)
     {
-        $profile = $request->user()->profile;
+        $user = $request->user();
+        $profile = $user->profile;
 
         if (!$profile) {
             return response()->json([
@@ -103,10 +105,15 @@ class ProfileController extends Controller
             ], 404);
         }
 
+        $totalApplied = $profile ? Application::where('seeker_id', $profile->id)->count() : 0;
+        $totalActive = $profile ? Application::where('seeker_id', $profile->id)->where('status', 'pending')->count() : 0;
+
         return response()->json([
             'success' => true,
             'data' => [
-                'profile' => $profile
+                'profile' => $profile,
+                'total_applied' => $totalApplied,
+                'total_active' => $totalActive
             ]
         ], 200);
     }
