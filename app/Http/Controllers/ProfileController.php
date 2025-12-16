@@ -18,7 +18,7 @@ class ProfileController extends Controller
             'age' => 'nullable|integer|min:17|max:100',
             'bio' => 'nullable|string',
             'cv' => 'nullable|file|mimes:pdf|max:5120',
-            'avatar' => 'nullable|file|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'avatar' => 'nullable|file|image|mimes:jpeg,png,jpg,gif',
         ], [
             'age.integer' => 'Umur harus berupa angka.',
             'age.min' => 'Umur minimal 17 tahun.',
@@ -29,7 +29,7 @@ class ProfileController extends Controller
             'cv.max' => 'Ukuran CV maksimal 5MB.',
             'avatar.image' => 'Avatar harus berupa gambar.',
             'avatar.mimes' => 'Avatar harus berformat JPEG, PNG, JPG, atau GIF.',
-            'avatar.max' => 'Ukuran avatar maksimal 2MB.',
+    
         ]);
 
         if ($validator->fails()) {
