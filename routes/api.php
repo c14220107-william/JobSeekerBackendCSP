@@ -46,6 +46,7 @@ Route::middleware(['auth:sanctum', 'role:user'])->prefix('user')->group(function
     Route::post('/profile', [ProfileController::class, 'createOrUpdate']);
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
+    Route::get('/job-postings/{id}', [JobPostingController::class, 'jobpostingById']);
 
     // Job application
     Route::post('/job-postings/{id}/apply', [JobPostingController::class, 'applyJob']);

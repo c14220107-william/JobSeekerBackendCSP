@@ -398,6 +398,39 @@ class JobPostingController extends Controller
         ], 200);
     }
 
+        /**
+     * Get all job postings (public - untuk job seeker)
+     */
+    public function jobpostingById($id)
+    {
+        // Get profile ID from user_id
+        $profile = \App\Models\Profile::where('user_id', $id)->first();
+        $profileId = $profile ? $profile->id : null;
+
+        $jobPostings = JobPosting::where('status', 'open')
+            ->withCount('applications')
+            ->with('company', 'qualifications')
+            ->addSelect([
+                'is_applied' => Application::select(\DB::raw('1'))
+                    ->whereColumn('applications.job_id', 'job_postings.id')
+                    ->where('applications.seeker_id', $profileId)
+                    ->limit(1)
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($jobPosting) {
+                $jobPosting->is_applied = (bool) $jobPosting->is_applied;
+                return $jobPosting;
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'job_postings' => $jobPostings
+            ]
+        ], 200);
+    }
+
     /**
      * Get single job posting by ID (public)
      */
