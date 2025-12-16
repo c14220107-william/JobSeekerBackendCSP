@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\Profile;
+use Illuminate\Support\Facades\Storage;
 
 class CompanyController extends Controller
 {
@@ -17,7 +18,7 @@ class CompanyController extends Controller
             'company_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'address' => 'nullable|string',
-            'photo_url' => 'nullable|url',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'avatar_url' => 'nullable|url',
         ]);
 
@@ -31,7 +32,20 @@ class CompanyController extends Controller
             ], 403);
         }
 
-        
+        // Get existing company to preserve old photo if no new file uploaded
+        $existingCompany = Company::where('user_id', $user->id)->first();
+        $photoUrl = $existingCompany->photo_url ?? null;
+
+        // Handle photo upload
+        if ($request->hasFile('photo_url')) {
+            // Delete old photo if exists
+            if ($existingCompany && $existingCompany->photo_url) {
+                $oldPath = str_replace('/storage/', '', $existingCompany->photo_url);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $photoPath = $request->file('photo_url')->store('company/profile', 'public');
+            $photoUrl = '/storage/' . $photoPath;
+        }
 
         // Create or update company
         $company = Company::updateOrCreate(
@@ -40,7 +54,7 @@ class CompanyController extends Controller
                 'name' => $request->company_name,
                 'description' => $request->description,
                 'address' => $request->address,
-                'photo_url' => $request->photo_url,
+                'photo_url' => $photoUrl,
             ]
         );
 
